@@ -1,5 +1,6 @@
 package com.stuin.dailyword;
 
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -7,23 +8,27 @@ import java.util.Date;
  * Created by Stuart on 3/30/2017.
  */
 public class Word {
-    String lemma;
+    String id;
     String definition;
     String[] parts_of_speech;
 
-    Date date;
+    Date date = new Date();
 
     Word() {
-
     }
 
     Word(String input) {
-        lemma = input.split(" ")[0];
+        id = input.split(" ")[1];
+        try {
+            date = MainActivity.format.parse(input.split(" ")[0]);
+        } catch(ParseException e) {
+            //Do nothing
+        }
     }
 
     Word set(int days) {
         Calendar cal = Calendar.getInstance();
-        cal.setTime(new Date());
+        cal.setTime(date);
         cal.add(Calendar.DATE, days);
         this.date = cal.getTime();
 
@@ -31,6 +36,6 @@ public class Word {
     }
 
     String print() {
-        return  lemma + ' ' + MainActivity.format.format(date);
+        return  MainActivity.format.format(date) + ' ' + id;
     }
 }

@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">DailyWord</string>
-    <string name="app_lock">Lock Notification</string>
-    <string name="app_start">Click for word</string>
+    <string name="main_lock">Lock Notification</string>
+    <string name="main_start">Click for word</string>
+    <string name="main_load">Loading&#8230;</string>
+    <string name="main_clear">Reset list</string>
 </resources>

@@ -14,15 +14,23 @@
     tools:context="com.stuin.dailyword.MainActivity">
 
     <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/app_start"
+            android:text="@string/main_start"
             android:id="@+id/Word"
             android:onClick="start"/>
 
     <Switch
-            android:text="@string/app_lock"
+            android:text="@string/main_lock"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/Lock"/>
+            android:id="@+id/Lock"
+            android:onClick="start"/>
+
+    <Button
+            android:text="@string/main_clear"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/button"
+            android:onClick="clear"/>
 </LinearLayout>

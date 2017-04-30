@@ -3,10 +3,13 @@ package com.stuin.dailyword;
 import android.app.*;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.View;
 import android.widget.Switch;
 import android.widget.TextView;
+import com.stuin.cleanvisuals.Request;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -14,9 +17,8 @@ import java.util.Locale;
 
 public class MainActivity extends Activity {
     private Words words;
-    private Word word;
 
-    public static DateFormat format = new SimpleDateFormat("MM/dd", Locale.US);
+    static DateFormat format = new SimpleDateFormat("MM/dd", Locale.US);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,7 +26,8 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         words = new Words(this);
-        words.next();
+        display();
+        if(words.wordList.size() < 2) words.next();
     }
 
     @Override
@@ -33,11 +36,8 @@ public class MainActivity extends Activity {
         words.save();
     }
 
-    public void start(View view) {
-        word = words.get();
-        words.next();
-        show(word);
-
+    public void display() {
+        //Make list of words
         StringBuilder stringBuilder = new StringBuilder();
         for(Word w : words.wordList) {
             String out = w.print() + "\n";
@@ -47,19 +47,31 @@ public class MainActivity extends Activity {
         ((TextView) findViewById(R.id.Word)).setText(stringBuilder.toString());
     }
 
-    private void show(Word word) {
-        Notification.Builder builder = new Notification.Builder(this);
-        builder = builder.setSmallIcon(R.mipmap.ic_launcher).setContentTitle(word.lemma).setContentText(format.format(word.date));
-        builder.setOngoing(((Switch) findViewById(R.id.Lock)).isChecked());
+    public void start(View view) {
+        //Get word
+        Word word = words.get();
+        if(view.getId() == R.id.Word) words.next();
 
-        Intent intent = new Intent(this, MainActivity.class);
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addParentStack(MainActivity.class);
-        stackBuilder.addNextIntent(intent);
-        PendingIntent pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-        builder.setContentIntent(pendingIntent);
+        //Set Notification
+        //show(word, 10);
+        Receiver.show(word, false, this);
+    }
 
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(12, builder.build());
+    public void clear(View view) {
+        words.wordList.clear();
+        words.next();
+        words.next();
+    }
+
+    private void show(Word word, int delay) {
+        //Prepare Notification
+        Intent notificationIntent = new Intent(this, Receiver.class);
+        notificationIntent.putExtra("Word", word.print());
+        notificationIntent.putExtra("Lock", ((Switch) findViewById(R.id.Lock)).isChecked());
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 12, notificationIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+
+        long futureInMillis = SystemClock.elapsedRealtime() + delay;
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, futureInMillis, pendingIntent);
     }
 }

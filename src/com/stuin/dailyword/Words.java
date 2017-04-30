@@ -2,9 +2,11 @@ package com.stuin.dailyword;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import com.google.gson.Gson;
+import android.content.res.Resources;
+import android.widget.TextView;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.stuin.cleanvisuals.Request;
-import org.xml.sax.DTDHandler;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -13,34 +15,52 @@ import java.util.*;
 /**
  * Created by Stuart on 3/30/2017.
  */
-public class Words {
+class Words {
     List<Word> wordList = new ArrayList<>();
-    Date date;
 
     private boolean full = false;
-    private SharedPreferences sharedPreferences;
     private MainActivity mainActivity;
+    private SharedPreferences sharedPreferences;
 
     Words(MainActivity mainActivity) {
-        date = new Date();
         this.mainActivity = mainActivity;
 
+        //Prepare apis
+        Request.address = "randomword.setgetgo.com";
+        //endPoints[1] = new EndPoint("od-api.oxforddictionaries.com:443/api/v1");
+
+        //endPoints[1].addProp("Accept", "application/json");
+
+        //Get save data
         sharedPreferences = mainActivity.getSharedPreferences("DailyWord", Context.MODE_PRIVATE);
         Set<String> set = sharedPreferences.getStringSet("Words", new HashSet<>());
+        while(!set.isEmpty()) {
+            String next = "22";
+            for(String s : set) if(s.compareTo(next) < 0) next = s;
+            set.remove(next);
+            wordList.add(new Word(next));
+        }
 
-        for(String s : set) wordList.add(new Word(s));
     }
 
     void next() {
-        Request.address = "randomword.setgetgo.com";
+        //Add word
+        //Request.endPoint = endPoints[0];
         word.start("get.php");
+        String s = mainActivity.getResources().getString(R.string.main_load);
+        ((TextView) mainActivity.findViewById(R.id.Word)).setText(s);
     }
 
     Word get() {
-        while(wordList.size() > 1 && value(wordList.get(0).date) != value(date)) {
-            wordList.remove(wordList.get(0));
+        int i = 0;
+        int date = value(new Date());
+
+        while(i < wordList.size() && value(wordList.get(i).date) < date) {
+            i++;
         }
-        return wordList.get(0);
+
+        if(i == wordList.size()) return new Word();
+        return wordList.get(i);
     }
 
     void save() {
@@ -59,16 +79,20 @@ public class Words {
         @Override
         public void run(List<String> s) {
             super.run(s);
+            //Get word
             String out = s.get(0);
             out = out.substring(0, 1).toUpperCase() + out.substring(1);
 
             if(full) {
-                Request.address = "oed-api-demo-2445581300291.apicast.io:443/oed/api/v0.0/words";
-                details.start("?lemma=" + out);
+                //Request.endPoint = endPoints[1];
+                details.start("entries/en/" + out);
             } else {
-                Word word = new Word().set(wordList.size());
-                word.lemma = out;
+                //Add base word
+                Word word = new Word().set(wordList.size() - 1);
+                word.id = out;
+
                 wordList.add(word);
+                mainActivity.display();
             }
         }
     };
@@ -81,8 +105,18 @@ public class Words {
             StringBuilder stringBuilder = new StringBuilder();
             for(String string : s) stringBuilder.append(string);
 
-            Gson gson = new Gson();
-            wordList.add(gson.fromJson(stringBuilder.toString(), Word.class).set(wordList.size()));
+            JsonParser jsonParser = new JsonParser();
+            JsonObject results = jsonParser.parse(stringBuilder.toString())
+                    .getAsJsonObject().getAsJsonArray("results").get(0)
+                    .getAsJsonObject();
+            JsonObject sense = results.getAsJsonArray("lexicalEntries").get(0)
+                    .getAsJsonObject().getAsJsonArray("entries").get(0)
+                    .getAsJsonObject().getAsJsonArray("senses").get(0)
+                    .getAsJsonObject();
+
+            Word word = new Word();
+            word.id = results.get("id").getAsString();
+            word.definition = sense.getAsJsonArray("definitions").get(0).getAsString();
         }
     };
 }
