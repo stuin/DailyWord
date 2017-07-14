@@ -2,10 +2,10 @@ package com.stuin.dailyword;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.widget.TextView;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.stuin.cleanvisuals.EndPoint;
 import com.stuin.cleanvisuals.Request;
 
 import java.text.DateFormat;
@@ -21,15 +21,16 @@ class Words {
     private boolean full = false;
     private MainActivity mainActivity;
     private SharedPreferences sharedPreferences;
+    private EndPoint[] endPoints;
 
     Words(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
 
         //Prepare apis
-        Request.address = "randomword.setgetgo.com";
-        //endPoints[1] = new EndPoint("od-api.oxforddictionaries.com:443/api/v1");
-
-        //endPoints[1].addProp("Accept", "application/json");
+        endPoints = new EndPoint[2];
+        endPoints[0] = new EndPoint("setgetgo.com/randomword/");
+        endPoints[1] = new EndPoint("od-api.oxforddictionaries.com:443/api/v1");
+        endPoints[1].addProp("Accept", "application/json");
 
         //Get save data
         sharedPreferences = mainActivity.getSharedPreferences("DailyWord", Context.MODE_PRIVATE);
@@ -45,7 +46,7 @@ class Words {
 
     void next() {
         //Add word
-        //Request.endPoint = endPoints[0];
+        Request.endPoint = endPoints[0];
         word.start("get.php");
         String s = mainActivity.getResources().getString(R.string.main_load);
         ((TextView) mainActivity.findViewById(R.id.Word)).setText(s);
@@ -84,11 +85,11 @@ class Words {
             out = out.substring(0, 1).toUpperCase() + out.substring(1);
 
             if(full) {
-                //Request.endPoint = endPoints[1];
+                Request.endPoint = endPoints[1];
                 details.start("entries/en/" + out);
             } else {
                 //Add base word
-                Word word = new Word().set(wordList.size() - 1);
+                Word word = new Word().set(wordList.size());
                 word.id = out;
 
                 wordList.add(word);

@@ -52,9 +52,12 @@ public class MainActivity extends Activity {
         Word word = words.get();
         if(view.getId() == R.id.Word) words.next();
 
+        //Get lock
+        boolean lock = ((Switch) findViewById(R.id.Lock)).isChecked();
+
         //Set Notification
         //show(word, 10);
-        Receiver.show(word, false, this);
+        Receiver.show(word, lock, this);
     }
 
     public void clear(View view) {

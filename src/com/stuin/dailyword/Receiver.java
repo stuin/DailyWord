@@ -15,7 +15,7 @@ import android.net.Uri;
 public class Receiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        Word word = new Word("04/30 Manualist");
+        Word word = new Word(intent.getCharSequenceExtra("Word").toString());
         boolean lock = intent.getBooleanExtra("Lock",false);
 
         show(word, lock, context);
@@ -26,7 +26,7 @@ public class Receiver extends BroadcastReceiver {
         builder.setSmallIcon(R.mipmap.ic_launcher).setContentTitle(word.id).setContentText(MainActivity.format.format(word.date));
         builder.setOngoing(lock);
 
-        Uri url = Uri.parse("http://merriam-webster.com/dictionary/" + word.id);
+        Uri url = Uri.parse("http://merriam-webster.com/dictionary/" + word.id.toLowerCase());
         Intent siteIntent = new Intent(Intent.ACTION_VIEW, url);
 
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
